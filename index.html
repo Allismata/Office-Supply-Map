@@ -1,0 +1,661 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+  :root{
+    --paper:#F7F3EA;
+    --paper-line:#E5E0D2;
+    --ink:#1A1A18;
+    --ink-line:#1A1A18;
+    --ink-soft:#7A776C;
+    --tile:#FFFEFA;
+    --tile-hover:#F4EFE2;
+    --alert:#B4502E;
+    --alert-bg:#F1DCCF;
+    --watch:#B98A2E;
+    --watch-bg:#F3E7C9;
+    --calm:#4B7B6B;
+    --calm-bg:#DCE9E3;
+    --setup-bg:#E9E5D8;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  html, body{ height:100%; margin:0; }
+  .rt-root{
+    font-family: var(--body);
+    color: var(--ink);
+    background: var(--paper);
+    padding: 0 0 48px 0;
+    min-height: 100vh;
+    border-radius: 12px;
+  }
+  .inner{ max-width: 900px; margin: 0 auto; padding: 0 40px; }
+
+  /* ---- hero ---- */
+  .map-header{ padding-top: 48px; margin-bottom: 32px; border-bottom: 1.3px solid var(--ink); padding-bottom: 22px; }
+  .map-eyebrow{
+    font-family: var(--display); font-size: 40px; font-weight:700; letter-spacing:-0.015em;
+    color: var(--ink); line-height:1.05;
+  }
+
+  /* ---- room grid ---- */
+  .room-grid{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+  }
+  .room-tile{
+    background: var(--tile); border: 1px solid var(--paper-line);
+    border-radius: 12px; aspect-ratio: 1; position:relative; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap: 14px; padding: 20px; transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(26,26,24,0.04);
+  }
+  .room-tile:hover{ background: var(--tile-hover); transform: translateY(-3px); box-shadow: 0 10px 22px -10px rgba(26,26,24,0.18); }
+  .room-tile:focus-visible{ outline: 2px solid var(--ink); outline-offset: 3px; }
+  .room-icon{ width: 68px; height: 68px; }
+  .room-icon svg{ width:100%; height:100%; stroke: var(--ink); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+  .room-label{ font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: 0.005em; }
+  .room-count{ font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+
+  .room-badge{
+    position:absolute; top:12px; right:12px; min-width:20px; height:20px; border-radius:10px;
+    background: var(--alert); color:#fff; font-family: var(--mono); font-size:10.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; padding: 0 5px;
+  }
+
+  .add-room-tile{ border-style: dashed; box-shadow:none; background: transparent; }
+  .add-room-tile:hover{ background: var(--tile-hover); }
+
+  /* ---- attention section ---- */
+  .attn-section{ margin-top: 44px; }
+  .attn-title{ font-family: var(--display); font-weight:700; font-size:18px; margin-bottom:14px; border-bottom:1.3px solid var(--ink); padding-bottom:10px; }
+  .attn-cols{ display:flex; flex-direction:column; gap: 22px; }
+  .attn-col-head{
+    display:flex; justify-content:space-between; align-items:baseline; font-weight:600; font-size:13px;
+    border-bottom: 1px solid var(--paper-line); padding-bottom:8px; margin-bottom:8px;
+  }
+  .attn-count{ font-family: var(--mono); font-size:11px; color: var(--ink-soft); }
+  .attn-row{
+    display:flex; justify-content:space-between; gap:8px; padding: 6px 0; cursor:pointer; font-size:12.5px;
+  }
+  .attn-row:hover .attn-row-name{ text-decoration: underline; }
+  .attn-row-room{ font-family: var(--mono); font-size:10px; color: var(--ink-soft); white-space:nowrap; }
+  .attn-none{ font-size:12px; color: var(--ink-soft); padding: 6px 0; }
+
+  /* ---- icon picker ---- */
+  .icon-grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap:6px; }
+  .icon-pick{
+    aspect-ratio:1; border:1px solid var(--paper-line); border-radius:8px; background:#fff; cursor:pointer;
+    padding:8px; display:flex; align-items:center; justify-content:center;
+  }
+  .icon-pick svg{ width:100%; height:100%; stroke: var(--ink); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .icon-pick.selected{ border-color: var(--ink); background: var(--tile-hover); }
+  .icon-pick:hover{ background: var(--tile-hover); }
+
+  /* ---- detail view ---- */
+  .detail-header{ display:flex; align-items:center; gap:14px; margin-bottom: 22px; }
+  .back-btn{
+    font-family: var(--mono); font-size: 12px; font-weight:600; letter-spacing:0.03em;
+    background: var(--tile); border: 1.3px solid var(--ink-line); border-radius: 4px;
+    padding: 8px 12px; cursor:pointer; display:flex; align-items:center; gap:6px; color: var(--ink);
+  }
+  .back-btn:hover{ background: var(--tile-hover); }
+  .detail-icon{ width:38px; height:38px; }
+  .detail-icon svg{ width:100%; height:100%; stroke:var(--ink); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .detail-title{ font-family: var(--display); font-weight:700; font-size:22px; }
+  .detail-sub{ font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+
+  .filters{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .filter-btn{
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing:0.02em;
+    padding: 6px 11px; border-radius: 4px; border: 1.5px solid var(--paper-line);
+    background: var(--tile); color: var(--ink-soft); cursor:pointer;
+  }
+  .filter-btn.active{ background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .add-btn{
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    padding: 8px 14px; border-radius: 4px; border: 1.3px solid var(--ink-line);
+    background: var(--ink); color: var(--paper); cursor:pointer; margin-left:auto;
+  }
+  .add-btn:hover{ background:#3a4149; }
+  .toolbar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  .item-list{ background: var(--tile); border: 1px solid var(--paper-line); border-radius: 12px; overflow:hidden; margin-top:16px; box-shadow: 0 1px 2px rgba(26,26,24,0.04); }
+  .item-row{
+    display:grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 1.3fr auto;
+    gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--paper-line); align-items:center;
+    font-size: 13px;
+  }
+  .item-row:last-child{ border-bottom:none; }
+  .item-row.head{
+    font-family: var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+    color: var(--ink-soft); background: var(--paper);
+  }
+  .item-name{ font-weight:600; }
+  .item-notes{ font-size: 11px; color: var(--ink-soft); margin-top:2px; }
+  .stock-cell{ font-family: var(--mono); font-size:12.5px; display:flex; align-items:center; gap:6px; }
+  .stock-btn{
+    width:20px; height:20px; border-radius:3px; border:1px solid var(--paper-line); background:#fff;
+    cursor:pointer; font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center;
+    color: var(--ink);
+  }
+  .stock-btn:hover{ background: var(--tile-hover); }
+  .stock-low{ color: var(--alert); font-weight:700; }
+  .stock-unset{ color: var(--ink-soft); }
+  .sub-yes{ color: var(--calm); font-family: var(--mono); font-size:11px; font-weight:600; }
+  .sub-no{ color: var(--ink-soft); font-family: var(--mono); font-size:11px; }
+  .exp-cell{ font-family: var(--mono); font-size:11.5px; color: var(--ink-soft); }
+
+  .badge{
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    padding: 4px 8px; border-radius: 3px; display:inline-block; white-space:nowrap;
+  }
+  .badge-ok{ background: var(--calm-bg); color: var(--calm); }
+  .badge-purchase{ background: var(--alert-bg); color: var(--alert); }
+  .badge-monitor{ background: var(--watch-bg); color: var(--watch); }
+  .badge-soon{ background: var(--watch-bg); color: var(--watch); }
+  .badge-expired{ background: var(--alert-bg); color: var(--alert); }
+  .badge-outofstock{ background: var(--ink); color: var(--paper); }
+  .badge-setup{ background: var(--setup-bg); color: var(--ink-soft); }
+
+  .row-actions{ display:flex; gap:4px; }
+  .icon-btn{ background:none; border:none; cursor:pointer; color: var(--ink-soft); padding:3px 5px; border-radius:4px; font-size:13px; }
+  .icon-btn:hover{ background: var(--tile-hover); color: var(--ink); }
+
+  .empty-state{ padding: 44px 20px; text-align:center; color: var(--ink-soft); font-size:13px; }
+  .loading{ padding: 40px; text-align:center; color: var(--ink-soft); font-family: var(--mono); font-size:12px; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(34,40,46,0.5); display:flex; align-items:center; justify-content:center; z-index:50; }
+  .modal{ background:var(--tile); border: 1px solid var(--paper-line); border-radius:12px; padding:24px; width:440px; max-width:92vw; max-height:88vh; overflow-y:auto; box-shadow: 0 12px 32px -12px rgba(26,26,24,0.3); }
+  .modal h3{ margin:0 0 16px 0; font-family: var(--display); font-size:17px; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-family: var(--mono); font-size:10.5px; font-weight:700; color: var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.03em; }
+  .field input, .field select{ width:100%; padding:8px 10px; border-radius:4px; border:1px solid var(--paper-line); font-size:13.5px; font-family: var(--body); background:#fff; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+  .btn-secondary{ padding:9px 16px; border-radius:4px; border:1px solid var(--paper-line); background:#fff; font-weight:600; font-size:13px; cursor:pointer; color: var(--ink-soft); }
+  .btn-primary{ padding:9px 16px; border-radius:4px; border:1.3px solid var(--ink-line); background: var(--ink); color: var(--paper); font-weight:700; font-size:13px; cursor:pointer; }
+  .btn-danger{ color: var(--alert); }
+
+  @media (max-width: 640px){
+    .item-row{ grid-template-columns: 1fr; gap:4px; }
+    .item-row.head{ display:none; }
+    .item-row{ padding: 14px; }
+  }
+</style>
+
+<div id="rt-app" class="rt-root">
+  <div class="loading">Loading your stock list…</div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = "products_v2";
+  const ROOMS_KEY = "rooms_v1";
+  let products = [];
+  let ROOMS = [];
+  let loaded = false;
+  let view = "map";       // "map" | room key
+  let statusFilter = "all";
+
+  const root = document.getElementById("rt-app");
+
+  const DEFAULT_ROOMS = [
+    { key:"pantry", label:"Pantry", iconKey:"pantry", categories:["Snacks & Beverages","Testing"] },
+    { key:"kitchen", label:"Kitchen", iconKey:"kitchen", categories:["Kitchen Supplies"] },
+    { key:"bathroom", label:"Bathroom", iconKey:"bathroom", categories:["Bathroom Supplies"] },
+    { key:"office", label:"Office", iconKey:"office", categories:["Workspace Supplies"] },
+  ];
+
+  const ICONS = {
+    pantry: `<svg viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="1"/><line x1="10" y1="24" x2="54" y2="24"/><line x1="10" y1="40" x2="54" y2="40"/><circle cx="20" cy="16" r="3"/><circle cx="30" cy="16" r="3"/><circle cx="20" cy="32" r="3"/><circle cx="30" cy="32" r="3"/><line x1="40" y1="12" x2="40" y2="20"/><line x1="48" y1="12" x2="48" y2="20"/></svg>`,
+    kitchen: `<svg viewBox="0 0 64 64"><rect x="6" y="14" width="52" height="34" rx="1"/><circle cx="20" cy="31" r="9"/><line x1="20" y1="22" x2="20" y2="17"/><circle cx="44" cy="24" r="3.4"/><circle cx="52" cy="24" r="3.4"/><circle cx="44" cy="34" r="3.4"/><circle cx="52" cy="34" r="3.4"/></svg>`,
+    bathroom: `<svg viewBox="0 0 64 64"><path d="M20 30c0-6 4-10 8-10s8 4 8 10" /><rect x="14" y="30" width="28" height="8" rx="4"/><path d="M18 38c0 8 4 14 10 14s10-6 10-14" /><rect x="44" y="14" width="14" height="10" rx="1"/><line x1="51" y1="24" x2="51" y2="30"/><circle cx="51" cy="34" r="3"/></svg>`,
+    office: `<svg viewBox="0 0 64 64"><rect x="8" y="20" width="48" height="4"/><line x1="12" y1="24" x2="12" y2="44"/><line x1="52" y1="24" x2="52" y2="44"/><rect x="24" y="30" width="16" height="12" rx="1"/><line x1="28" y1="42" x2="28" y2="48"/><line x1="36" y1="42" x2="36" y2="48"/><circle cx="46" cy="14" r="4"/></svg>`,
+    box: `<svg viewBox="0 0 64 64"><path d="M10 22 L32 10 L54 22 L32 34 Z"/><path d="M10 22 V46 L32 58 V34"/><path d="M54 22 V46 L32 58"/></svg>`,
+    drop: `<svg viewBox="0 0 64 64"><path d="M32 10 C40 24 48 34 48 42 C48 51 41 58 32 58 C23 58 16 51 16 42 C16 34 24 24 32 10 Z"/></svg>`,
+    closet: `<svg viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="1"/><line x1="32" y1="8" x2="32" y2="56"/><circle cx="27" cy="32" r="1.8"/><circle cx="37" cy="32" r="1.8"/></svg>`,
+    conference: `<svg viewBox="0 0 64 64"><ellipse cx="32" cy="32" rx="19" ry="11"/><circle cx="32" cy="13" r="3"/><circle cx="32" cy="51" r="3"/><circle cx="9" cy="32" r="3"/><circle cx="55" cy="32" r="3"/></svg>`,
+    library: `<svg viewBox="0 0 64 64"><line x1="8" y1="10" x2="8" y2="54"/><line x1="56" y1="10" x2="56" y2="54"/><line x1="8" y1="54" x2="56" y2="54"/><line x1="17" y1="16" x2="17" y2="54"/><line x1="26" y1="20" x2="26" y2="54"/><line x1="35" y1="13" x2="35" y2="54"/><line x1="44" y1="18" x2="44" y2="54"/></svg>`,
+    lounge: `<svg viewBox="0 0 64 64"><path d="M12 38 V28 a5 5 0 0 1 5-5 H47 a5 5 0 0 1 5 5 V38"/><rect x="9" y="38" width="46" height="11" rx="2"/><line x1="9" y1="49" x2="9" y2="56"/><line x1="55" y1="49" x2="55" y2="56"/></svg>`,
+    mailroom: `<svg viewBox="0 0 64 64"><rect x="8" y="16" width="48" height="32" rx="2"/><path d="M8 18 L32 38 L56 18"/></svg>`,
+    breakroom: `<svg viewBox="0 0 64 64"><path d="M14 24 H42 V42 a10 10 0 0 1-10 10 H24 a10 10 0 0 1-10-10 Z"/><path d="M42 28 H48 a6 6 0 0 1 0 12 H42"/><path d="M22 12 q3 4 0 8"/><path d="M30 12 q3 4 0 8"/></svg>`,
+  };
+  function getIcon(key){ return ICONS[key] || ICONS.box; }
+
+  function uid(){ return 'p_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const d = new Date(dateStr + "T00:00:00");
+    return Math.round((d - today) / 86400000);
+  }
+
+  function getStatus(p){
+    if(p.stock === "" || p.stock === null || typeof p.stock === "undefined"){
+      return {key:"setup", label:"SET LEVELS", cls:"badge-setup"};
+    }
+    const stock = Number(p.stock);
+    const min = Number(p.minStock);
+    const expDays = daysUntil(p.expiration);
+    if(expDays !== null && expDays < 0) return {key:"expired", label:"EXPIRED", cls:"badge-expired"};
+    if(expDays !== null && expDays <= 14) return {key:"soon", label:`USE SOON · ${expDays}d`, cls:"badge-soon"};
+    if(stock === 0) return {key:"outofstock", label:"OUT OF STOCK", cls:"badge-outofstock"};
+    if(stock <= min && p.subscription === "Yes") return {key:"monitor", label:"AUTO-ORDER DUE", cls:"badge-monitor"};
+    if(stock <= min) return {key:"purchase", label:"RUNNING LOW", cls:"badge-purchase"};
+    return {key:"ok", label:"OK", cls:"badge-ok"};
+  }
+
+  function needsAttention(p){
+    const k = getStatus(p).key;
+    return k === "purchase" || k === "monitor" || k === "soon" || k === "expired" || k === "outofstock";
+  }
+
+  async function loadRooms(){
+    try{
+      const res = await window.storage.get(ROOMS_KEY, false);
+      ROOMS = res && res.value ? JSON.parse(res.value) : DEFAULT_ROOMS.slice();
+      if(!res){ await saveRooms(); }
+    }catch(e){
+      ROOMS = DEFAULT_ROOMS.slice();
+      await saveRooms();
+    }
+  }
+
+  async function saveRooms(){
+    try{ await window.storage.set(ROOMS_KEY, JSON.stringify(ROOMS), false); }
+    catch(e){ console.error("room storage save failed", e); }
+  }
+
+  async function load(){
+    await loadRooms();
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      products = res && res.value ? JSON.parse(res.value) : seedData();
+      if(!res){ await save(); }
+    }catch(e){
+      products = seedData();
+      await save();
+    }
+    loaded = true;
+    render();
+  }
+
+  async function save(){
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(products), false); }
+    catch(e){ console.error("storage save failed", e); }
+  }
+
+  function seedData(){
+    return [
+      {id:uid(), name:'Verve Coffee Beans', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bags', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Hu Bars - Milk Chocolate', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Hu Bars - Dark Chocolate', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Berries', category:'Snacks & Beverages', stock:"", minStock:"", unit:'containers', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'Vendor: Woodlands Market'},
+      {id:uid(), name:'Cottage Cheese', category:'Snacks & Beverages', stock:"", minStock:"", unit:'containers', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Mighty Chia - Vanilla', category:'Snacks & Beverages', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Mighty Chia - Mango', category:'Snacks & Beverages', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Nuthouse Granola', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bags', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Mountain Valley Water - 1L', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Mountain Valley Water - 0.5L', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'S. Pellegrino Sparkling Water', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Kimino Green Tea - Glass (variety)', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'https://us.kimino.com/'},
+      {id:uid(), name:'Kimino Green Tea - Cans (variety)', category:'Snacks & Beverages', stock:"", minStock:"", unit:'cans', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'https://us.kimino.com/'},
+      {id:uid(), name:'DONA Chai - Unsweetened', category:'Snacks & Beverages', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'Vendor: Amazon'},
+      {id:uid(), name:'Samsara Bars', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'David Bars - Cake', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'For KB'},
+      {id:uid(), name:'David Bars - Blueberry', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'For KB'},
+      {id:uid(), name:'Barbell Peanut Butter', category:'Snacks & Beverages', stock:"", minStock:"", unit:'jars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'For AP'},
+      {id:uid(), name:'Zbiotics', category:'Snacks & Beverages', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Supplements - IV', category:'Snacks & Beverages', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Supplements - LMNT Electrolytes', category:'Snacks & Beverages', stock:"", minStock:"", unit:'sticks', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Supplements - Pludo', category:'Snacks & Beverages', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Supplements - Creatine', category:'Snacks & Beverages', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'Brand: Do Not Age or Momentous'},
+      {id:uid(), name:'Nespresso Pods', category:'Snacks & Beverages', stock:"", minStock:"", unit:'sleeves', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Honey', category:'Snacks & Beverages', stock:"", minStock:"", unit:'jars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Teapigs', category:'Snacks & Beverages', stock:"", minStock:"", unit:'boxes', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Madagascar Vanilla Syrup', category:'Snacks & Beverages', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'Small batch'},
+      {id:uid(), name:'Start and Honey Protein Bar', category:'Testing', stock:"", minStock:"", unit:'bars', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'New - monitor how it moves before committing'},
+      {id:uid(), name:'Plates', category:'Kitchen Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Bowls', category:'Kitchen Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Napkins', category:'Kitchen Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Paper Towels', category:'Kitchen Supplies', stock:"", minStock:"", unit:'rolls', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Utensils', category:'Kitchen Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Dishwasher Detergent', category:'Kitchen Supplies', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Dish Soap', category:'Kitchen Supplies', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Mouthwash Cups', category:'Kitchen Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Paper', category:'Workspace Supplies', stock:"", minStock:"", unit:'reams', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Sharpie S-Gel Pens', category:'Workspace Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'https://www.amazon.com/dp/B082PN3YD3'},
+      {id:uid(), name:'Screen Cleaners', category:'Workspace Supplies', stock:"", minStock:"", unit:'units', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Expo Markers', category:'Workspace Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Mints', category:'Workspace Supplies', stock:"", minStock:"", unit:'tins', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Tape', category:'Workspace Supplies', stock:"", minStock:"", unit:'rolls', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Good Wipes', category:'Bathroom Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'W/M'},
+      {id:uid(), name:'Pads & Tampons', category:'Bathroom Supplies', stock:"", minStock:"", unit:'boxes', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:''},
+      {id:uid(), name:'Aesop Mouthwash', category:'Bathroom Supplies', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'W/M'},
+      {id:uid(), name:'Underarm Wipes', category:'Bathroom Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'M'},
+      {id:uid(), name:'Neutrogena Wipes', category:'Bathroom Supplies', stock:"", minStock:"", unit:'packs', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'Credenza only'},
+      {id:uid(), name:'Aesop Room Spray', category:'Bathroom Supplies', stock:"", minStock:"", unit:'bottles', subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:'W/M'},
+    ];
+  }
+
+  function itemsForRoom(roomKey){
+    const room = ROOMS.find(r => r.key === roomKey);
+    if(!room) return [];
+    return products.filter(p => p.room ? p.room === roomKey : (room.categories || []).includes(p.category));
+  }
+
+  function roomForProduct(p){
+    return ROOMS.find(r => p.room ? r.key === p.room : (r.categories || []).includes(p.category));
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  function render(){
+    if(!loaded){ root.innerHTML = '<div class="loading">Loading your stock list…</div>'; return; }
+    if(view === "map") renderMap(); else renderDetail(view);
+  }
+
+  function attentionBuckets(items){
+    const buckets = { low: [], out: [], soon: [], expired: [] };
+    items.forEach(p => {
+      const st = getStatus(p);
+      const entry = { p, room: roomForProduct(p) };
+      if(st.key === "expired") buckets.expired.push(entry);
+      else if(st.key === "soon") buckets.soon.push(entry);
+      else if(st.key === "outofstock") buckets.out.push(entry);
+      else if(st.key === "purchase" || st.key === "monitor") buckets.low.push(entry);
+    });
+    return buckets;
+  }
+
+  function attnColumn(title, entries, showRoom){
+    const rows = entries.length === 0
+      ? `<div class="attn-none">None</div>`
+      : entries.slice(0, 8).map(({p, room}) => `
+          <div class="attn-row" data-id="${p.id}" data-room="${room ? room.key : ''}">
+            <span class="attn-row-name">${escapeHtml(p.name)}</span>
+            ${showRoom ? `<span class="attn-row-room">${room ? escapeHtml(room.label) : ''}</span>` : ""}
+          </div>
+        `).join("");
+    return `
+      <div class="attn-col">
+        <div class="attn-col-head"><span>${title}</span><span class="attn-count">${entries.length}</span></div>
+        ${rows}
+      </div>
+    `;
+  }
+
+  function attnSectionHtml(buckets, showRoom){
+    return `
+      <div class="attn-section">
+        <div class="attn-title">Attention</div>
+        <div class="attn-cols">
+          ${attnColumn("Expired", buckets.expired, showRoom)}
+          ${attnColumn("Expiring", buckets.soon, showRoom)}
+          ${attnColumn("Out of stock", buckets.out, showRoom)}
+          ${attnColumn("Running low", buckets.low, showRoom)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMap(){
+    const tiles = ROOMS.map(room => {
+      const items = itemsForRoom(room.key);
+      const alertCount = items.filter(needsAttention).length;
+      return `
+        <div class="room-tile" data-room="${room.key}" tabindex="0" role="button" aria-label="Open ${room.label}">
+          ${alertCount > 0 ? `<span class="room-badge">${alertCount}</span>` : ""}
+          <div class="room-icon">${getIcon(room.iconKey)}</div>
+          <div class="room-label">${escapeHtml(room.label)}</div>
+          <div class="room-count">${items.length} items</div>
+        </div>
+      `;
+    }).join("");
+
+    root.innerHTML = `
+      <div class="inner">
+        <div class="map-header">
+          <div class="map-eyebrow">Office Supply Map</div>
+        </div>
+        <div class="room-grid">
+          ${tiles}
+          <div class="room-tile add-room-tile" id="add-room-tile" tabindex="0" role="button" aria-label="Add room">
+            <div class="room-icon" style="opacity:.5"><svg viewBox="0 0 64 64"><line x1="32" y1="14" x2="32" y2="50"/><line x1="14" y1="32" x2="50" y2="32"/></svg></div>
+            <div class="room-label" style="color:var(--ink-soft)">Add room</div>
+          </div>
+        </div>
+
+        ${attnSectionHtml(attentionBuckets(products), true)}
+      </div>
+    `;
+
+    root.querySelectorAll(".room-tile[data-room]").forEach(tile => {
+      const open = () => { view = tile.dataset.room; statusFilter = "all"; render(); };
+      tile.onclick = open;
+      tile.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); } };
+    });
+    document.getElementById("add-room-tile").onclick = () => openRoomModal();
+    document.getElementById("add-room-tile").onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openRoomModal(); } };
+    root.querySelectorAll(".attn-row[data-room]").forEach(row => {
+      row.onclick = () => { if(row.dataset.room){ view = row.dataset.room; statusFilter = "all"; render(); } };
+    });
+  }
+
+  function renderDetail(roomKey){
+    const room = ROOMS.find(r => r.key === roomKey);
+    let items = itemsForRoom(roomKey);
+    if(statusFilter !== "all") items = items.filter(p => getStatus(p).key === statusFilter);
+
+    const statusCounts = {setup:0, purchase:0, monitor:0, soon:0, expired:0, outofstock:0, ok:0};
+    itemsForRoom(roomKey).forEach(p => statusCounts[getStatus(p).key]++);
+
+    const rows = items.map(p => {
+      const st = getStatus(p);
+      const low = p.stock !== "" && Number(p.stock) <= Number(p.minStock);
+      const stockDisplay = (p.stock === "" || p.stock === null)
+        ? `<span class="stock-unset">not set</span>`
+        : `<span class="${low ? 'stock-low' : ''}">${p.stock}</span><span style="color:var(--ink-soft)">/${p.minStock !== "" ? p.minStock : "–"} ${escapeHtml(p.unit||"")}</span>`;
+      return `
+        <div class="item-row">
+          <div>
+            <div class="item-name">${escapeHtml(p.name)}</div>
+            ${p.notes ? `<div class="item-notes">${escapeHtml(p.notes)}</div>` : ""}
+          </div>
+          <div class="stock-cell">
+            <button class="stock-btn" data-stock-adj="${p.id}" data-dir="-1">–</button>
+            ${stockDisplay}
+            <button class="stock-btn" data-stock-adj="${p.id}" data-dir="1">+</button>
+          </div>
+          <div>${p.subscription === "Yes" ? `<span class="sub-yes">✓ ${escapeHtml(p.frequency||"Yes")}</span>` : `<span class="sub-no">—</span>`}</div>
+          <div class="exp-cell">${p.expiration || "—"}</div>
+          <div><span class="badge ${st.cls}">${st.label}</span></div>
+          <div class="row-actions">
+            <button class="icon-btn" data-edit="${p.id}" title="Edit">✎</button>
+            <button class="icon-btn btn-danger" data-delete="${p.id}" title="Delete">🗑</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    root.innerHTML = `
+      <div class="inner">
+        <div class="detail-header" style="padding-top:40px;">
+          <button class="back-btn" id="back-btn">← Map</button>
+          <div class="detail-icon">${getIcon(room.iconKey)}</div>
+          <div>
+            <div class="detail-title">${escapeHtml(room.label)} <button class="icon-btn" id="edit-room-btn" title="Edit room" style="margin-left:4px; vertical-align:middle;">✎</button></div>
+            <div class="detail-sub">${itemsForRoom(roomKey).length} items</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="filters">
+            ${filterBtn("all","All")}
+            ${filterBtn("outofstock","Out of Stock", statusCounts.outofstock)}
+            ${filterBtn("purchase","Running Low", statusCounts.purchase)}
+            ${filterBtn("soon","Expiring", statusCounts.soon)}
+            ${filterBtn("expired","Expired", statusCounts.expired)}
+          </div>
+          <button class="add-btn" id="add-btn">+ Add Item</button>
+        </div>
+
+        <div class="item-list">
+          <div class="item-row head"><div>Product</div><div>Stock</div><div>Subscription</div><div>Expires</div><div>Status</div><div></div></div>
+          ${items.length === 0 ? `<div class="empty-state">Nothing here yet. Add an item to start tracking ${room.label.toLowerCase()}.</div>` : rows}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("back-btn").onclick = () => { view = "map"; render(); };
+    document.getElementById("edit-room-btn").onclick = (e) => { e.stopPropagation(); openRoomModal(room.key); };
+    document.getElementById("add-btn").onclick = () => openModal(null, room);
+    root.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.onclick = () => { statusFilter = btn.dataset.filter; render(); };
+    });
+    root.querySelectorAll("[data-edit]").forEach(btn => { btn.onclick = () => openModal(btn.dataset.edit, room); });
+    root.querySelectorAll("[data-delete]").forEach(btn => { btn.onclick = () => deleteProduct(btn.dataset.delete); });
+    root.querySelectorAll("[data-stock-adj]").forEach(btn => { btn.onclick = () => adjustStock(btn.dataset.stockAdj, parseInt(btn.dataset.dir)); });
+  }
+
+  function filterBtn(key, label, count){
+    const suffix = typeof count === "number" ? ` (${count})` : "";
+    return `<button class="filter-btn ${statusFilter===key?'active':''}" data-filter="${key}">${label}${suffix}</button>`;
+  }
+
+  async function adjustStock(id, dir){
+    const p = products.find(x => x.id === id);
+    if(!p) return;
+    const current = (p.stock === "" || p.stock === null) ? 0 : Number(p.stock);
+    p.stock = Math.max(0, current + dir);
+    await save();
+    render();
+  }
+
+  async function deleteProduct(id){
+    if(!confirm("Remove this item from the tracker?")) return;
+    products = products.filter(p => p.id !== id);
+    await save();
+    render();
+  }
+
+  function openRoomModal(existingKey){
+    const existing = existingKey ? ROOMS.find(r => r.key === existingKey) : null;
+    let selectedIcon = existing ? existing.iconKey : "box";
+    const iconKeys = ["closet","box","conference","library","lounge","mailroom","breakroom","drop","pantry","kitchen","bathroom","office"];
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>${existing ? "Edit room" : "Add room"}</h3>
+        <div class="field"><label>Title</label><input id="r-title" value="${existing ? escapeHtml(existing.label) : ''}" placeholder="e.g. Storage Closet"/></div>
+        <div class="field">
+          <label>Icon</label>
+          <div class="icon-grid" id="r-icon-grid">
+            ${iconKeys.map(k => `<button type="button" class="icon-pick ${k===selectedIcon?'selected':''}" data-icon="${k}">${ICONS[k]}</button>`).join("")}
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="r-cancel">Cancel</button>
+          <button class="btn-primary" id="r-save">${existing ? "Save Changes" : "Add room"}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+    document.getElementById("r-cancel").onclick = () => overlay.remove();
+    const grid = document.getElementById("r-icon-grid");
+    grid.querySelectorAll(".icon-pick").forEach(btn => {
+      btn.onclick = () => {
+        grid.querySelectorAll(".icon-pick").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedIcon = btn.dataset.icon;
+      };
+    });
+    document.getElementById("r-save").onclick = async () => {
+      const title = document.getElementById("r-title").value.trim();
+      if(!title) return;
+      if(existing){
+        existing.label = title;
+        existing.iconKey = selectedIcon;
+      } else {
+        const key = "room_" + Date.now() + "_" + Math.floor(Math.random()*1000);
+        ROOMS.push({ key, label: title, iconKey: selectedIcon, categories: [] });
+      }
+      await saveRooms();
+      overlay.remove();
+      render();
+    };
+  }
+
+  function openModal(id, room){
+    const p = id ? products.find(x => x.id === id) : {
+      name:"", room: room ? room.key : "", stock:"", minStock:"", unit:"",
+      subscription:"No", frequency:"", lastOrdered:"", expiration:"", notes:""
+    };
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>${id ? "Edit Item" : `Add Item — ${room.label}`}</h3>
+        <div class="field"><label>Product Name</label><input id="f-name" value="${escapeHtml(p.name)}" placeholder="e.g. Copy Paper"/></div>
+        <div class="field-row">
+          <div class="field"><label>Unit</label><input id="f-unit" value="${escapeHtml(p.unit)}" placeholder="e.g. boxes"/></div>
+          <div class="field">
+            <label>Auto Subscription?</label>
+            <select id="f-subscription">
+              <option value="No" ${p.subscription==="No"?"selected":""}>No</option>
+              <option value="Yes" ${p.subscription==="Yes"?"selected":""}>Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Current Stock</label><input id="f-stock" type="number" value="${p.stock}" placeholder="not set"/></div>
+          <div class="field"><label>Minimum Stock</label><input id="f-minstock" type="number" value="${p.minStock}" placeholder="not set"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Last Ordered</label><input id="f-lastordered" type="date" value="${p.lastOrdered||''}"/></div>
+          <div class="field"><label>Expiration Date</label><input id="f-expiration" type="date" value="${p.expiration||''}"/></div>
+        </div>
+        <div class="field"><label>Notes</label><input id="f-notes" value="${escapeHtml(p.notes||'')}" placeholder="optional"/></div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="f-cancel">Cancel</button>
+          <button class="btn-primary" id="f-save">${id ? "Save Changes" : "Add Item"}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById("f-cancel").onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+    document.getElementById("f-save").onclick = async () => {
+      const stockRaw = document.getElementById("f-stock").value;
+      const minRaw = document.getElementById("f-minstock").value;
+      const data = {
+        name: document.getElementById("f-name").value.trim() || "Untitled Item",
+        room: p.room || (room ? room.key : ""),
+        unit: document.getElementById("f-unit").value.trim(),
+        stock: stockRaw === "" ? "" : Number(stockRaw),
+        minStock: minRaw === "" ? "" : Number(minRaw),
+        subscription: document.getElementById("f-subscription").value,
+        frequency: document.getElementById("f-subscription").value === "Yes" ? "Monthly" : "",
+        lastOrdered: document.getElementById("f-lastordered").value,
+        expiration: document.getElementById("f-expiration").value,
+        notes: document.getElementById("f-notes").value.trim()
+      };
+      if(id){ Object.assign(p, data); } else { products.push({id: uid(), ...data}); }
+      await save();
+      overlay.remove();
+      render();
+    };
+  }
+
+  load();
+})();
+</script>
