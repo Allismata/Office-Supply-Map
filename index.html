@@ -255,40 +255,28 @@
     return k === "purchase" || k === "monitor" || k === "soon" || k === "expired" || k === "outofstock";
   }
 
-  async function loadRooms(){
-    try{
-      const res = await window.storage.get(ROOMS_KEY, false);
-      ROOMS = res && res.value ? JSON.parse(res.value) : DEFAULT_ROOMS.slice();
-      if(!res){ await saveRooms(); }
-    }catch(e){
-      ROOMS = DEFAULT_ROOMS.slice();
-      await saveRooms();
-    }
-  }
+async function loadRooms(){
+  const saved = localStorage.getItem(ROOMS_KEY);
+  ROOMS = saved ? JSON.parse(saved) : DEFAULT_ROOMS.slice();
+  if(!saved) await saveRooms();
+}
 
-  async function saveRooms(){
-    try{ await window.storage.set(ROOMS_KEY, JSON.stringify(ROOMS), false); }
-    catch(e){ console.error("room storage save failed", e); }
-  }
+async function saveRooms(){
+  localStorage.setItem(ROOMS_KEY, JSON.stringify(ROOMS));
+}
 
-  async function load(){
-    await loadRooms();
-    try{
-      const res = await window.storage.get(STORAGE_KEY, false);
-      products = res && res.value ? JSON.parse(res.value) : seedData();
-      if(!res){ await save(); }
-    }catch(e){
-      products = seedData();
-      await save();
-    }
-    loaded = true;
-    render();
-  }
+async function load(){
+  await loadRooms();
+  const saved = localStorage.getItem(STORAGE_KEY);
+  products = saved ? JSON.parse(saved) : seedData();
+  if(!saved) await save();
+  loaded = true;
+  render();
+}
 
-  async function save(){
-    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(products), false); }
-    catch(e){ console.error("storage save failed", e); }
-  }
+async function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+}
 
   function seedData(){
     return [
