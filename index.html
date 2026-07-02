@@ -276,9 +276,31 @@ async function saveRooms(){
 
 async function load(){
   await loadRooms();
-  const saved = localStorage.getItem(STORAGE_KEY);
-  products = saved ? JSON.parse(saved) : seedData();
-  if(!saved) await save();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*");
+
+  if(error){
+    console.error("Supabase products load error:", error);
+    products = [];
+  } else {
+    products = data.map(p => ({
+      id: p.id,
+      name: p.name,
+      room: p.room,
+      category: p.category,
+      stock: p.stock === null ? "" : p.stock,
+      minStock: p.min_stock === null ? "" : p.min_stock,
+      unit: p.unit || "",
+      subscription: p.subscription || "No",
+      frequency: p.frequency || "",
+      lastOrdered: p.last_ordered || "",
+      expiration: p.expiration || "",
+      notes: p.notes || ""
+    }));
+  }
+
   loaded = true;
   render();
 }
