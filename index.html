@@ -306,7 +306,28 @@ async function load(){
 }
 
 async function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  for (const p of products) {
+    const { error } = await supabase
+      .from("products")
+      .upsert({
+        id: p.id,
+        name: p.name,
+        room: p.room,
+        category: p.category,
+        stock: p.stock === "" ? null : p.stock,
+        min_stock: p.minStock === "" ? null : p.minStock,
+        unit: p.unit,
+        subscription: p.subscription,
+        frequency: p.frequency,
+        last_ordered: p.lastOrdered || null,
+        expiration: p.expiration || null,
+        notes: p.notes
+      });
+
+    if (error) {
+      console.error(error);
+    }
+  }
 }
 
   function seedData(){
