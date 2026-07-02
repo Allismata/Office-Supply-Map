@@ -193,6 +193,13 @@
 
 <script>
 (function(){
+const SUPABASE_URL = "https://htkihwdiiywtpdgfyhwu.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_S6IeXoLEZ2OTIcx5ip-yRw_1pJAMS0t";
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
   const STORAGE_KEY = "products_v2";
   const ROOMS_KEY = "rooms_v1";
   let products = [];
