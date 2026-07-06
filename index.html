@@ -635,12 +635,23 @@ const rows = Object.keys(grouped).map(section => {
     render();
   }
 
-  async function deleteProduct(id){
-    if(!confirm("Remove this item from the tracker?")) return;
-    products = products.filter(p => p.id !== id);
-    await save();
-    render();
+ async function deleteProduct(id){
+  if(!confirm("Remove this item from the tracker?")) return;
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.error("Supabase product delete error:", error);
+    alert("Could not delete item. Check console for details.");
+    return;
   }
+
+  products = products.filter(p => p.id !== id);
+  render();
+}
 
   function openRoomModal(existingKey){
     const existing = existingKey ? ROOMS.find(r => r.key === existingKey) : null;
