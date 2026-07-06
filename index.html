@@ -265,13 +265,48 @@ const supabase = window.supabase.createClient(
   }
 
 async function loadRooms(){
-  const saved = localStorage.getItem(ROOMS_KEY);
-  ROOMS = saved ? JSON.parse(saved) : DEFAULT_ROOMS.slice();
-  if(!saved) await saveRooms();
+  const { data, error } = await supabase
+    .from("rooms")
+    .select("*")
+    .order("label");
+
+  if(error || !data || data.length === 0){
+    console.error("Supabase rooms load error:", error);
+    ROOMS = DEFAULT_ROOMS.slice();
+
+    for (const r of ROOMS) {
+      await supabase.from("rooms").upsert({
+        key: r.key,
+        label: r.label,
+        icon_key: r.iconKey,
+        categories: r.categories || []
+      });
+    }
+  } else {
+    ROOMS = data.map(r => ({
+      key: r.key,
+      label: r.label,
+      iconKey: r.icon_key,
+      categories: r.categories || []
+    }));
+  }
 }
 
 async function saveRooms(){
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(ROOMS));
+  for (const r of ROOMS) {
+    const { error } = await supabase
+      .from("rooms")
+      .upsert({
+        key: r.key,
+        label: r.label,
+        icon_key: r.iconKey,
+        categories: r.categories || []
+      });
+
+    if(error){
+      console.error("Supabase rooms save error:", error);
+    }
+  }
 }
 
 async function load(){
@@ -313,19 +348,19 @@ async function save(){
         id: p.id,
         name: p.name,
         room: p.room,
-        category: p.category,
+        category: p.category || null,
         stock: p.stock === "" ? null : p.stock,
         min_stock: p.minStock === "" ? null : p.minStock,
-        unit: p.unit,
-        subscription: p.subscription,
-        frequency: p.frequency,
+        unit: p.unit || "",
+        subscription: p.subscription || "No",
+        frequency: p.frequency || "",
         last_ordered: p.lastOrdered || null,
         expiration: p.expiration || null,
-        notes: p.notes
+        notes: p.notes || ""
       });
 
-    if (error) {
-      console.error(error);
+    if(error){
+      console.error("Supabase products save error:", error);
     }
   }
 }
