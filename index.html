@@ -211,7 +211,7 @@ let view = window.location.hash
   ? window.location.hash.replace("#", "")
   : "map";       // "map" | room key
 
-let statusFilter = "all";
+let statusFilter = new URLSearchParams(window.location.search).get("filter") || "all";
 
   const root = document.getElementById("rt-app");
 
