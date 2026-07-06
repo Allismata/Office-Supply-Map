@@ -534,33 +534,52 @@ async function save(){
     const statusCounts = {setup:0, purchase:0, monitor:0, soon:0, expired:0, outofstock:0, ok:0};
     itemsForRoom(roomKey).forEach(p => statusCounts[getStatus(p).key]++);
 
-    const rows = items.map(p => {
-      const st = getStatus(p);
-      const low = p.stock !== "" && Number(p.stock) <= Number(p.minStock);
-      const stockDisplay = (p.stock === "" || p.stock === null)
-        ? `<span class="stock-unset">not set</span>`
-        : `<span class="${low ? 'stock-low' : ''}">${p.stock}</span><span style="color:var(--ink-soft)">/${p.minStock !== "" ? p.minStock : "–"} ${escapeHtml(p.unit||"")}</span>`;
-      return `
-        <div class="item-row">
-          <div>
-            <div class="item-name">${escapeHtml(p.name)}</div>
-            ${p.notes ? `<div class="item-notes">${escapeHtml(p.notes)}</div>` : ""}
-          </div>
-          <div class="stock-cell">
-            <button class="stock-btn" data-stock-adj="${p.id}" data-dir="-1">–</button>
-            ${stockDisplay}
-            <button class="stock-btn" data-stock-adj="${p.id}" data-dir="1">+</button>
-          </div>
-          <div>${p.subscription === "Yes" ? `<span class="sub-yes">✓ ${escapeHtml(p.frequency||"Yes")}</span>` : `<span class="sub-no">—</span>`}</div>
-          <div class="exp-cell">${p.expiration || "—"}</div>
-          <div><span class="badge ${st.cls}">${st.label}</span></div>
-          <div class="row-actions">
-            <button class="icon-btn" data-edit="${p.id}" title="Edit">✎</button>
-            <button class="icon-btn btn-danger" data-delete="${p.id}" title="Delete">🗑</button>
-          </div>
+const grouped = {};
+items.forEach(p => {
+  const section = p.section && p.section.trim() ? p.section.trim() : "Other";
+  if(!grouped[section]) grouped[section] = [];
+  grouped[section].push(p);
+});
+
+const rows = Object.keys(grouped).map(section => {
+  const sectionHeader = `
+    <div class="item-row head">
+      <div style="font-size:13px; color:var(--ink);">${escapeHtml(section)}</div>
+      <div></div><div></div><div></div><div></div><div></div>
+    </div>
+  `;
+
+  const sectionRows = grouped[section].map(p => {
+    const st = getStatus(p);
+    const low = p.stock !== "" && Number(p.stock) <= Number(p.minStock);
+    const stockDisplay = (p.stock === "" || p.stock === null)
+      ? `<span class="stock-unset">not set</span>`
+      : `<span class="${low ? 'stock-low' : ''}">${p.stock}</span><span style="color:var(--ink-soft)">/${p.minStock !== "" ? p.minStock : "–"} ${escapeHtml(p.unit||"")}</span>`;
+
+    return `
+      <div class="item-row">
+        <div>
+          <div class="item-name">${escapeHtml(p.name)}</div>
+          ${p.notes ? `<div class="item-notes">${escapeHtml(p.notes)}</div>` : ""}
         </div>
-      `;
-    }).join("");
+        <div class="stock-cell">
+          <button class="stock-btn" data-stock-adj="${p.id}" data-dir="-1">–</button>
+          ${stockDisplay}
+          <button class="stock-btn" data-stock-adj="${p.id}" data-dir="1">+</button>
+        </div>
+        <div>${p.subscription === "Yes" ? `<span class="sub-yes">✓ ${escapeHtml(p.frequency||"Yes")}</span>` : `<span class="sub-no">—</span>`}</div>
+        <div class="exp-cell">${p.expiration || "—"}</div>
+        <div><span class="badge ${st.cls}">${st.label}</span></div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="${p.id}" title="Edit">✎</button>
+          <button class="icon-btn btn-danger" data-delete="${p.id}" title="Delete">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return sectionHeader + sectionRows;
+}).join("");
 
     root.innerHTML = `
       <div class="inner">
