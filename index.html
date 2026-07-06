@@ -207,8 +207,11 @@ const supabase = window.supabase.createClient(
   let products = [];
   let ROOMS = [];
   let loaded = false;
-  let view = "map";       // "map" | room key
-  let statusFilter = "all";
+let view = window.location.hash
+  ? window.location.hash.replace("#", "")
+  : "map";       // "map" | room key
+
+let statusFilter = "all";
 
   const root = document.getElementById("rt-app");
 
@@ -236,6 +239,12 @@ const supabase = window.supabase.createClient(
   function getIcon(key){ return ICONS[key] || ICONS.box; }
 
   function uid(){ return 'p_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+
+  function setView(newView){
+  view = newView;
+  window.location.hash = newView === "map" ? "" : newView;
+  render();
+}
 
   function daysUntil(dateStr){
     if(!dateStr) return null;
@@ -515,14 +524,17 @@ async function save(){
     `;
 
     root.querySelectorAll(".room-tile[data-room]").forEach(tile => {
-      const open = () => { view = tile.dataset.room; statusFilter = "all"; render(); };
+      const open = () => {  statusFilter = "all";
+  setView(tile.dataset.room);
+};
       tile.onclick = open;
       tile.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); } };
     });
     document.getElementById("add-room-tile").onclick = () => openRoomModal();
     document.getElementById("add-room-tile").onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openRoomModal(); } };
     root.querySelectorAll(".attn-row[data-room]").forEach(row => {
-      row.onclick = () => { if(row.dataset.room){ view = row.dataset.room; statusFilter = "all"; render(); } };
+      row.onclick = () => { if(row.dataset.room){ statusFilter = "all";
+setView(row.dataset.room); } };
     });
   }
 
@@ -610,7 +622,7 @@ const rows = Object.keys(grouped).map(section => {
       </div>
     `;
 
-    document.getElementById("back-btn").onclick = () => { view = "map"; render(); };
+    document.getElementById("back-btn").onclick = () => {setView("map"); };
     document.getElementById("edit-room-btn").onclick = (e) => { e.stopPropagation(); openRoomModal(room.key); };
     document.getElementById("add-btn").onclick = () => openModal(null, room);
     root.querySelectorAll(".filter-btn").forEach(btn => {
