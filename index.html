@@ -246,37 +246,6 @@ let statusFilter = new URLSearchParams(window.location.search).get("filter") || 
   render();
 }
 
-  function setView(newView){
-  view = newView;
-  window.location.hash = newView === "map" ? "" : newView;
-  render();
-}
-
-function setStatusFilter(newFilter){
-  statusFilter = newFilter;
-
-  const params = new URLSearchParams(window.location.search);
-
-  if(newFilter === "all"){
-    params.delete("filter");
-  } else {
-    params.set("filter", newFilter);
-  }
-
-  const query = params.toString();
-  const hash = window.location.hash;
-
-  window.history.replaceState(
-    null,
-    "",
-    window.location.pathname + (query ? "?" + query : "") + hash
-  );
-
-  render();
-}
-
-function daysUntil(dateStr){
-
   function daysUntil(dateStr){
     if(!dateStr) return null;
     const today = new Date(); today.setHours(0,0,0,0);
@@ -657,10 +626,8 @@ const rows = Object.keys(grouped).map(section => {
     document.getElementById("edit-room-btn").onclick = (e) => { e.stopPropagation(); openRoomModal(room.key); };
     document.getElementById("add-btn").onclick = () => openModal(null, room);
     root.querySelectorAll(".filter-btn").forEach(btn => {
-  btn.onclick = () => {
-    setStatusFilter(btn.dataset.filter);
-  };
-});
+      btn.onclick = () => { statusFilter = btn.dataset.filter; render(); };
+    });
     root.querySelectorAll("[data-edit]").forEach(btn => { btn.onclick = () => openModal(btn.dataset.edit, room); });
     root.querySelectorAll("[data-delete]").forEach(btn => { btn.onclick = () => deleteProduct(btn.dataset.delete); });
     root.querySelectorAll("[data-stock-adj]").forEach(btn => { btn.onclick = () => adjustStock(btn.dataset.stockAdj, parseInt(btn.dataset.dir)); });
