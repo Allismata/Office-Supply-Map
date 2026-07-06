@@ -332,6 +332,7 @@ async function load(){
       frequency: p.frequency || "",
       lastOrdered: p.last_ordered || "",
       expiration: p.expiration || "",
+      section: p.section || "",
       notes: p.notes || ""
     }));
   }
@@ -356,6 +357,7 @@ async function save(){
         frequency: p.frequency || "",
         last_ordered: p.lastOrdered || null,
         expiration: p.expiration || null,
+        section: p.section || "",
         notes: p.notes || ""
       });
 
@@ -699,6 +701,14 @@ async function save(){
           <div class="field"><label>Last Ordered</label><input id="f-lastordered" type="date" value="${p.lastOrdered||''}"/></div>
           <div class="field"><label>Expiration Date</label><input id="f-expiration" type="date" value="${p.expiration||''}"/></div>
         </div>
+        <div class="field">
+  <label>Section</label>
+  <input
+    id="f-section"
+    value="${escapeHtml(p.section || '')}"
+    placeholder="e.g. Drinks, Bars, Supplements"
+  />
+</div>
         <div class="field"><label>Notes</label><input id="f-notes" value="${escapeHtml(p.notes||'')}" placeholder="optional"/></div>
         <div class="modal-actions">
           <button class="btn-secondary" id="f-cancel">Cancel</button>
@@ -722,8 +732,8 @@ async function save(){
         frequency: document.getElementById("f-subscription").value === "Yes" ? "Monthly" : "",
         lastOrdered: document.getElementById("f-lastordered").value,
         expiration: document.getElementById("f-expiration").value,
-        notes: document.getElementById("f-notes").value.trim()
-      };
+section: document.getElementById("f-section").value.trim(),
+notes: document.getElementById("f-notes").value.trim() };
       if(id){ Object.assign(p, data); } else { products.push({id: uid(), ...data}); }
       await save();
       overlay.remove();
