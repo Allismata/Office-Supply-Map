@@ -658,15 +658,44 @@ const rows = Object.keys(grouped).map(section => {
             ${iconKeys.map(k => `<button type="button" class="icon-pick ${k===selectedIcon?'selected':''}" data-icon="${k}">${ICONS[k]}</button>`).join("")}
           </div>
         </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" id="r-cancel">Cancel</button>
-          <button class="btn-primary" id="r-save">${existing ? "Save Changes" : "Add room"}</button>
-        </div>
+      <div class="modal-actions">
+  ${existing ? `<button class="btn-secondary btn-danger" id="r-delete">Delete room</button>` : ""}
+  <button class="btn-secondary" id="r-cancel">Cancel</button>
+  <button class="btn-primary" id="r-save">${existing ? "Save Changes" : "Add room"}</button>
+</div>
       </div>
     `;
     document.body.appendChild(overlay);
     overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
     document.getElementById("r-cancel").onclick = () => overlay.remove();
+    if(existing){
+  document.getElementById("r-delete").onclick = async () => {
+    const itemsInRoom = products.filter(p => p.room === existing.key);
+
+    if(itemsInRoom.length > 0){
+      alert("Move or delete the items in this room before deleting the room.");
+      return;
+    }
+
+    if(!confirm(`Delete "${existing.label}"?`)) return;
+
+    const { error } = await supabase
+      .from("rooms")
+      .delete()
+      .eq("key", existing.key);
+
+    if(error){
+      console.error("Supabase room delete error:", error);
+      alert("Could not delete room.");
+      return;
+    }
+
+    ROOMS = ROOMS.filter(r => r.key !== existing.key);
+    view = "map";
+    overlay.remove();
+    render();
+  };
+}
     const grid = document.getElementById("r-icon-grid");
     grid.querySelectorAll(".icon-pick").forEach(btn => {
       btn.onclick = () => {
